@@ -2,10 +2,19 @@
 import datetime
 import os
 import random
+import schedule
+import threading
+import time
 
 from dotenv import load_dotenv
 
 from discord.ext import commands
+
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+
+bot = commands.Bot(command_prefix='!')
 
 # assume 0 as start of week
 def next_monday(d):
@@ -18,13 +27,6 @@ def whole_weeks_since(d):
     datetime_today = datetime.date.today()
     datetime_since = datetime_today - d
     return datetime_since.days // 7
-
-
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
-
-bot = commands.Bot(command_prefix='!')
 
 @bot.event
 async def on_ready():
@@ -57,6 +59,10 @@ async def on_member_join(member):
         f'Hi {member.name}, welcome to The Jackson Street Experience!'
     )
 
+# @bot.command(name='chores', help='Responds with the expected chore schedule')
+# async def chore_check(ctx):
+
+
 @bot.command(name='trash', help='Responds with an expected trash and recycling time')
 async def trash_check(ctx):
     datetime_20210301 = datetime.date(2021, 3, 1)
@@ -81,4 +87,22 @@ async def on_error(event, *args, **kwargs):
         else:
             raise
 
-bot.run(TOKEN)
+def chore_notify():
+    print("Time to do the following chores:")
+
+def init_schedule():
+    schedule.every().day.at("18:00").do(chore_notify)
+
+def run_bot():
+    bot.run(TOKEN)
+
+def run_schedule():
+    schedule.run_pending()
+    time.sleep(1)
+
+def main():
+    schedule_thread = threading.Thread(target=run_schedule, args=(1,), daemon=True)
+    run_bot()
+
+if __name__ == "__main__":
+    main()
