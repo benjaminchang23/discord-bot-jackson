@@ -5,16 +5,31 @@ import random
 import schedule
 import threading
 import time
+from queue import Queue
 
 from dotenv import load_dotenv
 
 from discord.ext import commands
+from discord import utils
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 bot = commands.Bot(command_prefix='!')
+
+rooms = ['dining room', 'family room', 'kitchen', 'office']
+accessways = ['deck', 'porch', 'stairs']
+
+daily = ['wipe kitchen countertops', 'wipe dining table', 'sort mail', 'clean room', 'check trash and recycling bins', 'water plants']
+weekly = ['clean toilet', 'clean shower', 'clean water fixtures (knobs, handles, faucets', 'check fridge contents', 'clean stovetop', 'clean accessway', 'weed garden']
+monthly = []
+
+# queues
+daily_q = Queue()
+chore_list = []
+
+channel = None
 
 # assume 0 as start of week
 def next_monday(d):
@@ -34,9 +49,12 @@ async def on_ready():
         if guild.name == GUILD:
             break
 
+    channel = utils.get(guild.channels, name='bot-spam')
+
     print(
         f'{bot.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})\n'
+        f'{bot.user} will announce on channel with id: {channel.id}\n'
     )
 
     datetime_20210301 = datetime.date(2021, 3, 1)
@@ -61,6 +79,11 @@ async def on_member_join(member):
 
 # @bot.command(name='chores', help='Responds with the expected chore schedule')
 # async def chore_check(ctx):
+
+@bot.command(name='schedule', help='Responds with current chore schedule')
+async def schedule_check(ctx):
+    response = schedule.get_jobs()
+    await ctx.channel.send(response)
 
 
 @bot.command(name='trash', help='Responds with an expected trash and recycling time')
@@ -87,21 +110,45 @@ async def on_error(event, *args, **kwargs):
         else:
             raise
 
-def chore_notify():
-    print("Time to do the following chores:")
+@bot.event
+async def alert_chore():
+    await channel.send('daily chore alert')
+
+async def chore_populate_daily():
+    print('populate daily chores')
+    daily_chores = 3
+
+    while daily_chores > 0:
+        daily_chores-=1
+        if daily_q.empty():
+            [daily_q.put(v) for v in random.sample(daily,len(daily))]
+        chore_list.append(daily_q.get())
+
+    await bot.loop.call_soon_threadsafe(alert_chore)
+
+def print_something():
+    print('something')
 
 def init_schedule():
-    schedule.every().day.at("18:00").do(chore_notify)
+    print(f'Init schedule at: {datetime.datetime.now()}')
+    schedule.every().day.at("18:00").do(chore_populate_daily)
+    schedule.every(3).seconds.do(print_something)
+
+    schedule.every(10).seconds.do(chore_populate_daily)
+    # schedule.every().sunday.at("18:00").do(chore_populate_monthly)
 
 def run_bot():
     bot.run(TOKEN)
 
-def run_schedule():
-    schedule.run_pending()
-    time.sleep(1)
+def choose_programming():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 def main():
-    schedule_thread = threading.Thread(target=run_schedule, args=(1,), daemon=True)
+    init_schedule()
+    schedule_thread = threading.Thread(target=choose_programming, daemon=True)
+    schedule_thread.start()
     run_bot()
 
 if __name__ == "__main__":

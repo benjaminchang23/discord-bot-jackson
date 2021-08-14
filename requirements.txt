@@ -1,2 +1,2 @@
 discord.py
-schdule.py
+schdule
