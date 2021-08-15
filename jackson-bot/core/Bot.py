@@ -1,4 +1,5 @@
 # Bot.py
+import asyncio
 import datetime
 import os
 import random
@@ -29,7 +30,7 @@ monthly = []
 daily_q = Queue()
 chore_list = []
 
-channel = None
+chore_channel = None
 
 # assume 0 as start of week
 def next_monday(d):
@@ -45,16 +46,17 @@ def whole_weeks_since(d):
 
 @bot.event
 async def on_ready():
+    global chore_channel
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
 
-    channel = utils.get(guild.channels, name='bot-spam')
+    chore_channel = utils.get(guild.channels, name='bot-spam')
 
     print(
         f'{bot.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})\n'
-        f'{bot.user} will announce on channel with id: {channel.id}\n'
+        f'{bot.user} will announce chores on channel with id: {chore_channel.id}\n'
     )
 
     datetime_20210301 = datetime.date(2021, 3, 1)
@@ -112,9 +114,10 @@ async def on_error(event, *args, **kwargs):
 
 @bot.event
 async def alert_chore():
-    await channel.send('daily chore alert')
+    global chore_channel
+    await chore_channel.send('daily chore alert')
 
-async def chore_populate_daily():
+def chore_populate_daily():
     print('populate daily chores')
     daily_chores = 3
 
@@ -124,15 +127,13 @@ async def chore_populate_daily():
             [daily_q.put(v) for v in random.sample(daily,len(daily))]
         chore_list.append(daily_q.get())
 
-    await bot.loop.call_soon_threadsafe(alert_chore)
-
-def print_something():
-    print('something')
+    if bot.is_ready():
+        print(f'current_user: {bot.user}')
+        bot.loop.create_task(alert_chore())
 
 def init_schedule():
     print(f'Init schedule at: {datetime.datetime.now()}')
     schedule.every().day.at("18:00").do(chore_populate_daily)
-    schedule.every(3).seconds.do(print_something)
 
     schedule.every(10).seconds.do(chore_populate_daily)
     # schedule.every().sunday.at("18:00").do(chore_populate_monthly)
@@ -143,7 +144,7 @@ def run_bot():
 def choose_programming():
     while True:
         schedule.run_pending()
-        time.sleep(1)
+        time.sleep(10)
 
 def main():
     init_schedule()
