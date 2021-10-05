@@ -28,7 +28,6 @@ monthly = []
 
 # queues
 daily_q = Queue()
-chore_list = []
 
 chore_channel = None
 
@@ -79,14 +78,10 @@ async def on_member_join(member):
         f'Hi {member.name}, welcome to The Jackson Street Experience!'
     )
 
-# @bot.command(name='chores', help='Responds with the expected chore schedule')
-# async def chore_check(ctx):
-
 @bot.command(name='schedule', help='Responds with current chore schedule')
 async def schedule_check(ctx):
     response = schedule.get_jobs()
     await ctx.channel.send(response)
-
 
 @bot.command(name='trash', help='Responds with an expected trash and recycling time')
 async def trash_check(ctx):
@@ -113,30 +108,35 @@ async def on_error(event, *args, **kwargs):
             raise
 
 @bot.event
-async def alert_chore():
+async def alert_chore(chore_list):
     global chore_channel
-    await chore_channel.send('daily chore alert')
+    chore_string = f'Daily chore alert: {chore_list}'
+    print(chore_string)
+    await chore_channel.send(chore_string)
 
-def chore_populate_daily():
-    print('populate daily chores')
+def chore_publish_daily():
+    print('Publish daily chores')
+    chore_list = []
     daily_chores = 3
+
+    if daily_q.empty():
+        [daily_q.put(v) for v in random.sample(daily, len(daily))]
 
     while daily_chores > 0:
         daily_chores-=1
-        if daily_q.empty():
-            [daily_q.put(v) for v in random.sample(daily,len(daily))]
         chore_list.append(daily_q.get())
 
     if bot.is_ready():
-        print(f'current_user: {bot.user}')
-        bot.loop.create_task(alert_chore())
+        # print(f'Current_user: {bot.user}')
+        bot.loop.create_task(alert_chore(chore_list))
 
 def init_schedule():
     print(f'Init schedule at: {datetime.datetime.now()}')
-    schedule.every().day.at("18:00").do(chore_populate_daily)
+    schedule.every().day.at("18:00").do(chore_publish_daily)
 
-    schedule.every(10).seconds.do(chore_populate_daily)
-    # schedule.every().sunday.at("18:00").do(chore_populate_monthly)
+    schedule.every(30).seconds.do(chore_publish_daily)
+    # schedule.every().sunday.at("18:00").do()
+    # schedule.every().sunday.at("18:00").do(chore_publish_monthly)
 
 def run_bot():
     bot.run(TOKEN)
