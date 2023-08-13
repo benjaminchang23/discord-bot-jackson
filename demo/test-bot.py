@@ -79,7 +79,7 @@ async def on_message(message):
             print(response)
             await bot_channel.send(response)
         # print("I see a message!")
-        await bot_channel.send("I see a message!")
+        # await bot_channel.send("I see a message!")
 
 @client.event
 async def on_ready():
