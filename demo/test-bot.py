@@ -20,7 +20,7 @@ client = discord.Client(intents=intents)
 
 bot_channel = None
 
-task_time = datetime.time(17, 0, 0, tzinfo=pytz.utc)
+task_time = datetime.time(22, 0, 0, tzinfo=pytz.utc)
 
 # assume 0 as start of week
 def next_monday(d):
