@@ -78,7 +78,7 @@ async def on_message(message):
             response = trash_check()
             print(response)
             await bot_channel.send(response)
-        print("I see a message!")
+        # print("I see a message!")
         await bot_channel.send("I see a message!")
 
 @client.event
@@ -90,13 +90,13 @@ async def on_ready():
 
     bot_channel = utils.get(guild.channels, name='bot-spam')
 
-    print(
-        f'{client.user} is connected to the following guild:\n'
-        f'{guild.name}(id: {guild.id})\n'
-        f'{client.user} will announce chores on channel with id: {bot_channel.id}\n'
-    )
+    # print(
+    #     f'{client.user} is connected to the following guild:\n'
+    #     f'{guild.name}(id: {guild.id})\n'
+    #     f'{client.user} will announce chores on channel with id: {bot_channel.id}\n'
+    # )
 
     members = '\n - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}')
+    # print(f'Guild Members:\n - {members}')
 
 client.run(TOKEN)
