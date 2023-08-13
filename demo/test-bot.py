@@ -88,15 +88,15 @@ async def on_ready():
         if guild.name == GUILD:
             break
 
-    bot_channel = utils.get(guild.channels, name='bot-spam')
+    bot_channel = utils.get(guild.channels, name='general')
 
-    # print(
-    #     f'{client.user} is connected to the following guild:\n'
-    #     f'{guild.name}(id: {guild.id})\n'
-    #     f'{client.user} will announce chores on channel with id: {bot_channel.id}\n'
-    # )
+    print(
+        f'{client.user} is connected to the following guild:\n'
+        f'{guild.name}(id: {guild.id})\n'
+        f'{client.user} will announce chores on channel with id: {bot_channel.id}\n'
+    )
 
     members = '\n - '.join([member.name for member in guild.members])
-    # print(f'Guild Members:\n - {members}')
+    print(f'Guild Members:\n - {members}')
 
 client.run(TOKEN)
