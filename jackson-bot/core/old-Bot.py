@@ -2,20 +2,34 @@
 import asyncio
 import datetime
 import os
+import random
+import schedule
+import threading
+import time
+from queue import Queue
 
 from dotenv import load_dotenv
 
-from discord import Intents
+from discord.ext import commands
 from discord import utils
-from discord.ext import commands, tasks
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
-bot = commands.Bot(command_prefix='!', intents=Intents.default())
+bot = commands.Bot(command_prefix='!')
 
-bot_channel = None
+rooms = ['dining room', 'family room', 'kitchen', 'office']
+accessways = ['deck', 'porch', 'stairs']
+
+daily = ['wipe kitchen countertops', 'wipe dining table', 'sort mail', 'clean room', 'check trash and recycling bins', 'water plants']
+weekly = ['clean toilet', 'clean shower', 'clean water fixtures (knobs, handles, faucets', 'check fridge contents', 'clean stovetop', 'clean accessway', 'weed garden']
+monthly = []
+
+# queues
+daily_q = Queue()
+
+chore_channel = None
 
 # assume 0 as start of week
 def next_monday(d):
@@ -31,17 +45,17 @@ def whole_weeks_since(d):
 
 @bot.event
 async def on_ready():
-    global bot_channel
+    global chore_channel
     for guild in bot.guilds:
         if guild.name == GUILD:
             break
 
-    bot_channel = utils.get(guild.channels, name='bot-spam')
+    chore_channel = utils.get(guild.channels, name='bot-spam')
 
     print(
         f'{bot.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})\n'
-        f'{bot.user} will announce street cleaning on channel with id: {bot_channel.id}\n'
+        f'{bot.user} will announce chores on channel with id: {chore_channel.id}\n'
     )
 
     datetime_20210301 = datetime.date(2021, 3, 1)
@@ -64,22 +78,10 @@ async def on_member_join(member):
         f'Hi {member.name}, welcome to The Jackson Street Experience!'
     )
 
-@tasks.loop(hours=24)
-async def every_day():
-    message_channel = bot.get_channel(bot_channel) # replace with your channel id
-    today = datetime.date.today()
-    if today.weekday() in [2, 3]: # 2 corresponds to Wednesday, 3 corresponds to Thursday
-        week_of_month = (today.day - 1) // 7 + 1
-        if week_of_month == 3:
-            await message_channel.send('Street cleanup is today!')
-
-@every_day.before_loop
-async def before():
-    for _ in range(60 * 60 * 24): # loop the checking every seconds in one day
-        now = datetime.datetime.now()
-        if now.hour == 9:
-            break
-        await asyncio.sleep(60) # wait 60 seconds before looping again. This is necessary to mitigate high resource usage.
+@bot.command(name='schedule', help='Responds with current chore schedule')
+async def schedule_check(ctx):
+    response = schedule.get_jobs()
+    await ctx.channel.send(response)
 
 @bot.command(name='trash', help='Responds with an expected trash and recycling time')
 async def trash_check(ctx):
@@ -88,7 +90,7 @@ async def trash_check(ctx):
     datetime_trash = next_monday(datetime_today)
     mondays = whole_weeks_since(datetime_20210301)
 
-    # TODO add email sync as on_event listener this will cover holidays and other unexpected changes
+    # TODO add email sync as on_event listener
     response = f"Today is {datetime_today} next expected trash time is {datetime_trash} sometime in the morning.\n"
     if mondays % 2 == 0:
         response += "No recycling til next cycle\n"
@@ -105,11 +107,49 @@ async def on_error(event, *args, **kwargs):
         else:
             raise
 
+@bot.event
+async def alert_chore(chore_list):
+    global chore_channel
+    chore_string = f'Daily chore alert: {chore_list}'
+    print(chore_string)
+    await chore_channel.send(chore_string)
+
+def chore_publish_daily():
+    print('Publish daily chores')
+    chore_list = []
+    daily_chores = 3
+
+    if daily_q.empty():
+        [daily_q.put(v) for v in random.sample(daily, len(daily))]
+
+    while daily_chores > 0:
+        daily_chores-=1
+        chore_list.append(daily_q.get())
+
+    if bot.is_ready():
+        # print(f'Current_user: {bot.user}')
+        bot.loop.create_task(alert_chore(chore_list))
+
+def init_schedule():
+    print(f'Init schedule at: {datetime.datetime.now()}')
+    schedule.every().day.at("18:00").do(chore_publish_daily)
+
+    schedule.every(30).seconds.do(chore_publish_daily)
+    # schedule.every().sunday.at("18:00").do()
+    # schedule.every().sunday.at("18:00").do(chore_publish_monthly)
+
 def run_bot():
-    every_day.start()
     bot.run(TOKEN)
 
+def choose_programming():
+    while True:
+        schedule.run_pending()
+        time.sleep(10)
+
 def main():
+    init_schedule()
+    schedule_thread = threading.Thread(target=choose_programming, daemon=True)
+    schedule_thread.start()
     run_bot()
 
 if __name__ == "__main__":

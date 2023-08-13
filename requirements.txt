@@ -1,2 +1,4 @@
 discord.py
-schdule
+python-dotenv
+pytz
+schedule
