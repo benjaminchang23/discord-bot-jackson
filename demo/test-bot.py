@@ -21,16 +21,16 @@ client = discord.Client(intents=intents)
 bot_channel = None
 
 task_times = [
-    datetime.time(22, 0, 0, tzinfo=pytz.utc),
-    datetime.time(23, 5, 0, tzinfo=pytz.utc),
-    datetime.time(23, 10, 0, tzinfo=pytz.utc),
-    datetime.time(23, 17, 0, tzinfo=pytz.utc),
-    datetime.time(23, 18, 0, tzinfo=pytz.utc),
-    datetime.time(23, 19, 0, tzinfo=pytz.utc),
-    datetime.time(23, 20, 0, tzinfo=pytz.utc),
-    datetime.time(23, 21, 0, tzinfo=pytz.utc),
-    datetime.time(23, 22, 0, tzinfo=pytz.utc),
-    datetime.time(23, 23, 0, tzinfo=pytz.utc),
+    datetime.time(22, 26, 0, tzinfo=pytz.utc),
+    datetime.time(22, 27, 0, tzinfo=pytz.utc),
+    datetime.time(22, 28, 0, tzinfo=pytz.utc),
+    datetime.time(22, 29, 0, tzinfo=pytz.utc),
+    datetime.time(22, 30, 0, tzinfo=pytz.utc),
+    datetime.time(22, 31, 0, tzinfo=pytz.utc),
+    datetime.time(22, 32, 0, tzinfo=pytz.utc),
+    datetime.time(22, 33, 0, tzinfo=pytz.utc),
+    datetime.time(22, 34, 0, tzinfo=pytz.utc),
+    datetime.time(22, 35, 0, tzinfo=pytz.utc),
 ]
 
 # assume 0 as start of week
@@ -111,6 +111,9 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
+    today = datetime.date.today()
+    print(f"daily_task time: {today}")
+    print(f'task_times: {task_times}')
 
 def run_bot():
     client.run(TOKEN)
