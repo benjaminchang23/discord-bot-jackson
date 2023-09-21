@@ -20,7 +20,11 @@ client = discord.Client(intents=intents)
 
 bot_channel = None
 
-task_time = datetime.time(22, 0, 0, tzinfo=pytz.utc)
+task_times = [
+    datetime.time(22, 0, 0, tzinfo=pytz.utc),
+    datetime.time(23, 0, 0, tzinfo=pytz.utc),
+    datetime.time(24, 0, 0, tzinfo=pytz.utc),
+]
 
 # assume 0 as start of week
 def next_monday(d):
@@ -55,10 +59,11 @@ def trash_check():
         response += "Recycling should be put down on the curb\n"
     return response
 
-@tasks.loop(time=task_time)
+@tasks.loop(time=task_times)
 async def daily_task():
     global bot_channel
     today = datetime.date.today()
+    print(f"daily_task time: {today}")
     if today.weekday() in [2, 3]: # 2 corresponds to Wednesday, 3 corresponds to Thursday
         week_of_month = (today.day - 1) // 7 + 1
         if week_of_month == 3:
