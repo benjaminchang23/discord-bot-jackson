@@ -24,6 +24,13 @@ task_times = [
     datetime.time(22, 0, 0, tzinfo=pytz.utc),
     datetime.time(23, 5, 0, tzinfo=pytz.utc),
     datetime.time(23, 10, 0, tzinfo=pytz.utc),
+    datetime.time(23, 17, 0, tzinfo=pytz.utc),
+    datetime.time(23, 18, 0, tzinfo=pytz.utc),
+    datetime.time(23, 19, 0, tzinfo=pytz.utc),
+    datetime.time(23, 20, 0, tzinfo=pytz.utc),
+    datetime.time(23, 21, 0, tzinfo=pytz.utc),
+    datetime.time(23, 22, 0, tzinfo=pytz.utc),
+    datetime.time(23, 23, 0, tzinfo=pytz.utc),
 ]
 
 # assume 0 as start of week
