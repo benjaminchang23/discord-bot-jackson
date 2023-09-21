@@ -111,8 +111,8 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
-    today = datetime.date.today()
-    print(f"daily_task time: {today}")
+    now = datetime.datetime.now(pytz.utc)
+    print(f"daily_task time: {now}")
     print(f'task_times: {task_times}')
 
 def run_bot():
