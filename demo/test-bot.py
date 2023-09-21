@@ -22,7 +22,7 @@ bot_channel = None
 
 task_times = [
     datetime.time(22, 0, 0, tzinfo=pytz.utc),
-    datetime.time(23, 0, 0, tzinfo=pytz.utc),
+    datetime.time(23, 5, 0, tzinfo=pytz.utc),
     datetime.time(24, 0, 0, tzinfo=pytz.utc),
 ]
 
