@@ -21,16 +21,7 @@ client = discord.Client(intents=intents)
 bot_channel = None
 
 task_times = [
-    datetime.time(22, 26, 0, tzinfo=pytz.utc),
-    datetime.time(22, 27, 0, tzinfo=pytz.utc),
-    datetime.time(22, 28, 0, tzinfo=pytz.utc),
-    datetime.time(22, 29, 0, tzinfo=pytz.utc),
-    datetime.time(22, 30, 0, tzinfo=pytz.utc),
-    datetime.time(22, 31, 0, tzinfo=pytz.utc),
-    datetime.time(22, 32, 0, tzinfo=pytz.utc),
-    datetime.time(22, 33, 0, tzinfo=pytz.utc),
-    datetime.time(22, 34, 0, tzinfo=pytz.utc),
-    datetime.time(22, 35, 0, tzinfo=pytz.utc),
+    datetime.time(22, 0, 0, tzinfo=pytz.utc),
 ]
 
 # assume 0 as start of week
@@ -70,11 +61,17 @@ def trash_check():
 async def daily_task():
     global bot_channel
     today = datetime.date.today()
-    print(f"daily_task time: {today}")
-    if today.weekday() in [2, 3]: # 2 corresponds to Wednesday, 3 corresponds to Thursday
+    await bot_channel.send(f'daily_task time: {str(today)}')
+    if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
         week_of_month = (today.day - 1) // 7 + 1
         if week_of_month == 3:
-            await bot_channel.send('Street cleanup is today!')
+            # 148906826790993920
+            # 694758082479128637
+            user_ids = ["148906826790993920", "694758082479128637"]
+            mentions = ""
+            for user_id in user_ids:
+                mentions += "<@" + user_id + "> "
+            await bot_channel.send(mentions + 'Street cleanup is tomorrow!')
     elif today.weekday() == 6: # 6 is Sunday
         response = trash_check()
         print(response)
@@ -111,9 +108,10 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
-    now = datetime.datetime.now(pytz.utc)
+    now = str(datetime.datetime.now(pytz.utc))
     print(f"daily_task time: {now}")
     print(f'task_times: {task_times}')
+    daily_task.start()
 
 def run_bot():
     client.run(TOKEN)
