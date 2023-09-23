@@ -61,7 +61,6 @@ def trash_check():
 async def daily_task():
     global bot_channel
     today = datetime.date.today()
-    await bot_channel.send(f'daily_task time: {str(today)}')
     if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
         week_of_month = (today.day - 1) // 7 + 1
         if week_of_month == 3:
