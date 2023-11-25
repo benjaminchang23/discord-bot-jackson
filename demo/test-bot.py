@@ -111,7 +111,9 @@ async def on_ready():
     now = str(datetime.datetime.now(pytz.utc))
     print(f"daily_task time: {now}")
     print(f'task_times: {task_times}')
-    daily_task.start()
+
+    if not daily_task.is_running():
+        daily_task.start()
 
 def run_bot():
     client.run(TOKEN)
