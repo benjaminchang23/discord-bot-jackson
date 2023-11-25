@@ -20,7 +20,9 @@ client = discord.Client(intents=intents)
 
 bot_channel = None
 
-task_time = datetime.time(22, 0, 0, tzinfo=pytz.utc)
+task_times = [
+    datetime.time(22, 0, 0, tzinfo=pytz.utc),
+]
 
 # assume 0 as start of week
 def next_monday(d):
@@ -55,14 +57,21 @@ def trash_check():
         response += "Recycling should be put down on the curb\n"
     return response
 
-@tasks.loop(time=task_time)
+@tasks.loop(time=task_times)
 async def daily_task():
     global bot_channel
     today = datetime.date.today()
-    if today.weekday() in [2, 3]: # 2 corresponds to Wednesday, 3 corresponds to Thursday
-        week_of_month = (today.day - 1) // 7 + 1
-        if week_of_month == 3:
-            await bot_channel.send('Street cleanup is today!')
+    if today.month() not in [1, 2, 3, 12]: # no street sweeping in the winter
+        if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
+            week_of_month = (today.day - 1) // 7 + 1
+            if week_of_month == 3:
+                # 148906826790993920
+                # 694758082479128637
+                user_ids = ["148906826790993920", "694758082479128637"]
+                mentions = ""
+                for user_id in user_ids:
+                    mentions += "<@" + user_id + "> "
+                await bot_channel.send(mentions + 'Street cleanup is tomorrow!')
     elif today.weekday() == 6: # 6 is Sunday
         response = trash_check()
         print(response)
@@ -99,6 +108,10 @@ async def on_ready():
 
     members = '\n - '.join([member.name for member in guild.members])
     print(f'Guild Members:\n - {members}')
+    now = str(datetime.datetime.now(pytz.utc))
+    print(f"daily_task time: {now}")
+    print(f'task_times: {task_times}')
+    daily_task.start()
 
 def run_bot():
     client.run(TOKEN)

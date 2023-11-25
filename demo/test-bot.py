@@ -61,16 +61,17 @@ def trash_check():
 async def daily_task():
     global bot_channel
     today = datetime.date.today()
-    if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
-        week_of_month = (today.day - 1) // 7 + 1
-        if week_of_month == 3:
-            # 148906826790993920
-            # 694758082479128637
-            user_ids = ["148906826790993920", "694758082479128637"]
-            mentions = ""
-            for user_id in user_ids:
-                mentions += "<@" + user_id + "> "
-            await bot_channel.send(mentions + 'Street cleanup is tomorrow!')
+    if today.month() not in [1, 2, 3, 12]: # no street sweeping in the winter
+        if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
+            week_of_month = (today.day - 1) // 7 + 1
+            if week_of_month == 3:
+                # 148906826790993920
+                # 694758082479128637
+                user_ids = ["148906826790993920", "694758082479128637"]
+                mentions = ""
+                for user_id in user_ids:
+                    mentions += "<@" + user_id + "> "
+                await bot_channel.send(mentions + 'Street cleanup is tomorrow!')
     elif today.weekday() == 6: # 6 is Sunday
         response = trash_check()
         print(response)
