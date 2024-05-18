@@ -62,7 +62,7 @@ async def daily_task():
     global bot_channel
     today = datetime.date.today()
     if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
-        if today.month() not in [1, 2, 3, 12]: # no street sweeping in the winter
+        if today.month not in [1, 2, 3, 12]: # no street sweeping in the winter
             week_of_month = (today.day - 1) // 7 + 1
             if week_of_month == 3:
                 # 148906826790993920
