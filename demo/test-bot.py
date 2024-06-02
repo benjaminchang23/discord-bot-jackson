@@ -1,4 +1,6 @@
+from calendar import Calendar
 import datetime
+from math import ceil
 import os
 from dotenv import load_dotenv
 
@@ -25,6 +27,30 @@ task_times = [
 ]
 
 
+def week_calc_calendar(datetime_today: datetime.date):
+    # for a week starting on sunday like a calendar
+    cal = Calendar(6)
+    weeks = cal.monthdayscalendar(datetime_today.year, datetime_today.month)
+    for x in range(len(weeks)):
+        if datetime_today.day in weeks[x]:
+            return x + 1
+
+
+def week_calc_math(datetime_today: datetime.date):
+    first_day = datetime_today.replace(day=1)
+    dom = datetime_today.day
+    adjusted_dom = dom + (1 + first_day.weekday()) % 7
+
+    return int(ceil(adjusted_dom/7.0))
+
+
+def week_calc(datetime_today: datetime.date):
+    week_of_month_cal = week_calc_calendar(datetime_today)
+    week_of_month_math = week_calc_math(datetime_today)
+    assert week_of_month_cal == week_of_month_math, f"{datetime_today} cal: {week_of_month_cal} math: {week_of_month_math}"
+    return week_of_month_cal
+
+
 # assume 0 as start of week
 def next_monday(datetime_today: datetime.date):
     days_ahead = 0 - datetime_today.weekday()
@@ -34,9 +60,8 @@ def next_monday(datetime_today: datetime.date):
 
 
 def next_street_sweep(datetime_today: datetime.date):
-    week_of_month = (datetime_today.day - 1) // 7 + 1
+    week_of_month = week_calc(datetime_today)
     
-
 
 def whole_weeks_since(d: datetime.date):
     datetime_today = datetime.date.today()
@@ -79,7 +104,7 @@ async def daily_task():
     datetime_today = datetime.date.today()
     if datetime_today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
         if datetime_today.month not in [1, 2, 3, 12]: # no street sweeping in the winter
-            week_of_month = (datetime_today.day - 1) // 7 + 1
+            week_of_month = week_calc(datetime_today)
             if week_of_month == 3:
                 # 148906826790993920
                 # 694758082479128637
