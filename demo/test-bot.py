@@ -24,17 +24,25 @@ task_times = [
     datetime.time(22, 0, 0, tzinfo=pytz.utc),
 ]
 
+
 # assume 0 as start of week
-def next_monday(d):
-    days_ahead = 0 - d.weekday()
+def next_monday(datetime_today: datetime.date):
+    days_ahead = 0 - datetime_today.weekday()
     if days_ahead <= 0: # Target day already happened this week
         days_ahead += 7
-    return d + datetime.timedelta(days_ahead)
+    return datetime_today + datetime.timedelta(days_ahead)
 
-def whole_weeks_since(d):
+
+def next_street_sweep(datetime_today: datetime.date):
+    week_of_month = (datetime_today.day - 1) // 7 + 1
+    
+
+
+def whole_weeks_since(d: datetime.date):
     datetime_today = datetime.date.today()
     datetime_since = datetime_today - d
     return datetime_since.days // 7
+
 
 @client.event
 async def on_member_join(member):
@@ -42,6 +50,13 @@ async def on_member_join(member):
     await member.dm_channel.send(
         f'Hi {member.name}, welcome to The Jackson Street Experience!'
     )
+
+
+def street_sweep_check():
+    datetime_today = datetime.date.today()
+    datetime_street = next_street_sweep(datetime_today)
+    response = f"Today is {datetime_today} expected street sweeping on the near side is at {datetime_street}, far side at {datetime_street+datetime.timedelta(days=1)} sometime in the morning"
+
 
 def trash_check():
     datetime_20210301 = datetime.date(2021, 3, 1)
@@ -57,13 +72,14 @@ def trash_check():
         response += "Recycling should be put down on the curb\n"
     return response
 
+
 @tasks.loop(time=task_times)
 async def daily_task():
     global bot_channel
-    today = datetime.date.today()
-    if today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
-        if today.month not in [1, 2, 3, 12]: # no street sweeping in the winter
-            week_of_month = (today.day - 1) // 7 + 1
+    datetime_today = datetime.date.today()
+    if datetime_today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
+        if datetime_today.month not in [1, 2, 3, 12]: # no street sweeping in the winter
+            week_of_month = (datetime_today.day - 1) // 7 + 1
             if week_of_month == 3:
                 # 148906826790993920
                 # 694758082479128637
@@ -72,10 +88,11 @@ async def daily_task():
                 for user_id in user_ids:
                     mentions += "<@" + user_id + "> "
                 await bot_channel.send(mentions + 'Street cleanup is tomorrow!')
-    elif today.weekday() == 6: # 6 is Sunday
+    elif datetime_today.weekday() == 6: # 6 is Sunday
         response = trash_check()
         print(response)
         await bot_channel.send(response)
+
 
 @client.event
 async def on_message(message):
@@ -88,8 +105,13 @@ async def on_message(message):
             response = trash_check()
             print(response)
             await bot_channel.send(response)
+        elif content.startswith("street"):
+            response = street_sweep_check()
+            print(response)
+            await bot_channel.send(response)
         # print("I see a message!")
         # await bot_channel.send("I see a message!")
+
 
 @client.event
 async def on_ready():
@@ -115,11 +137,14 @@ async def on_ready():
     if not daily_task.is_running():
         daily_task.start()
 
+
 def run_bot():
     client.run(TOKEN)
 
+
 def main():
     run_bot()
+
 
 if __name__ == "__main__":
     main()
