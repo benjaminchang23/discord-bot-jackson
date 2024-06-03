@@ -58,10 +58,16 @@ def week_calc(datetime_today: datetime.date):
 def next_street_sweep_tuesday(datetime_today: datetime.date):
     week_of_month = week_calc(datetime_today)
     if week_of_month < _street_sweep_week:
-        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month)
+        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
     elif week_of_month == _street_sweep_week:
-        
+        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
     else:
+        # we can ignore 12 + 1 months and just check to exclude 12 
+        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month + 1, 1)
+        if street_sweep_datetime in _winter_datetime_months:
+            raise RuntimeError("handle this case better")
+        
+
 
 def whole_weeks_since(datetime_20210301: datetime.date):
     datetime_today = datetime.date.today()
