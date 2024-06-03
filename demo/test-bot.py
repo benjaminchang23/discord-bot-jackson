@@ -10,6 +10,9 @@ import discord
 from discord import Intents, utils
 from discord.ext import commands, tasks
 
+_street_sweep_days = [1, 2] # 1 corresponds to Tuesday, 2 corresponds to Wednesday
+_street_sweep_week = 3
+_winter_datetime_months = [1, 2, 3, 12]
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -34,6 +37,7 @@ def week_calc_calendar(datetime_today: datetime.date):
     for x in range(len(weeks)):
         if datetime_today.day in weeks[x]:
             return x + 1
+    raise ValueError(f"Could not calculate week from {datetime_today}")
 
 
 def week_calc_math(datetime_today: datetime.date):
@@ -51,36 +55,34 @@ def week_calc(datetime_today: datetime.date):
     return week_of_month_cal
 
 
+def next_street_sweep_tuesday(datetime_today: datetime.date):
+    week_of_month = week_calc(datetime_today)
+    if week_of_month < _street_sweep_week:
+        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month)
+    elif week_of_month == _street_sweep_week:
+        
+    else:
+
+def whole_weeks_since(datetime_20210301: datetime.date):
+    datetime_today = datetime.date.today()
+    datetime_since = datetime_today - datetime_20210301
+    return datetime_since.days // 7
+
+
+def street_sweep_check():
+    datetime_today = datetime.date.today()
+    if datetime_today.month in _winter_datetime_months:
+        return f"Today is in one of the winter months, which do not have street sweeping"
+    datetime_street = next_street_sweep_tuesday(datetime_today)
+    return f"Today is {datetime_today} expected street sweeping on the near side is at {datetime_street}, far side at {datetime_street + datetime.timedelta(days=1)} sometime in the morning"
+
+
 # assume 0 as start of week
 def next_monday(datetime_today: datetime.date):
     days_ahead = 0 - datetime_today.weekday()
     if days_ahead <= 0: # Target day already happened this week
         days_ahead += 7
     return datetime_today + datetime.timedelta(days_ahead)
-
-
-def next_street_sweep(datetime_today: datetime.date):
-    week_of_month = week_calc(datetime_today)
-    
-
-def whole_weeks_since(d: datetime.date):
-    datetime_today = datetime.date.today()
-    datetime_since = datetime_today - d
-    return datetime_since.days // 7
-
-
-@client.event
-async def on_member_join(member):
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'Hi {member.name}, welcome to The Jackson Street Experience!'
-    )
-
-
-def street_sweep_check():
-    datetime_today = datetime.date.today()
-    datetime_street = next_street_sweep(datetime_today)
-    response = f"Today is {datetime_today} expected street sweeping on the near side is at {datetime_street}, far side at {datetime_street+datetime.timedelta(days=1)} sometime in the morning"
 
 
 def trash_check():
@@ -102,10 +104,10 @@ def trash_check():
 async def daily_task():
     global bot_channel
     datetime_today = datetime.date.today()
-    if datetime_today.weekday() in [1, 2]: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
-        if datetime_today.month not in [1, 2, 3, 12]: # no street sweeping in the winter
+    if datetime_today.weekday() in _street_sweep_days: # 1 corresponds to Tuesday, 2 corresponds to Wednesday
+        if datetime_today.month not in _winter_datetime_months: # no street sweeping in the winter
             week_of_month = week_calc(datetime_today)
-            if week_of_month == 3:
+            if week_of_month == _street_sweep_week:
                 # 148906826790993920
                 # 694758082479128637
                 user_ids = ["148906826790993920", "694758082479128637"]
@@ -117,6 +119,14 @@ async def daily_task():
         response = trash_check()
         print(response)
         await bot_channel.send(response)
+
+
+@client.event
+async def on_member_join(member):
+    await member.create_dm()
+    await member.dm_channel.send(
+        f'Hi {member.name}, welcome to The Jackson Street Experience!'
+    )
 
 
 @client.event
