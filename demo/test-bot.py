@@ -55,7 +55,7 @@ def week_calc(datetime_today: datetime.date):
     return week_of_month_cal
 
 
-def next_street_sweep_tuesday(datetime_today: datetime.date):
+def this_month_street_sweep_tuesday(datetime_today: datetime.date):
     week_of_month = week_calc(datetime_today)
     if week_of_month < _street_sweep_week:
         street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
@@ -66,21 +66,14 @@ def next_street_sweep_tuesday(datetime_today: datetime.date):
         street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month + 1, 1)
         if street_sweep_datetime in _winter_datetime_months:
             raise RuntimeError("handle this case better")
-        
-
-
-def whole_weeks_since(datetime_20210301: datetime.date):
-    datetime_today = datetime.date.today()
-    datetime_since = datetime_today - datetime_20210301
-    return datetime_since.days // 7
 
 
 def street_sweep_check():
     datetime_today = datetime.date.today()
     if datetime_today.month in _winter_datetime_months:
         return f"Today is in one of the winter months, which do not have street sweeping"
-    datetime_street = next_street_sweep_tuesday(datetime_today)
-    return f"Today is {datetime_today} expected street sweeping on the near side is at {datetime_street}, far side at {datetime_street + datetime.timedelta(days=1)} sometime in the morning"
+    datetime_street = this_month_street_sweep_tuesday(datetime_today)
+    return f"Today is {datetime_today}, expected street sweeping this month on the near side is at {datetime_street}, far side at {datetime_street + datetime.timedelta(days=1)} sometime in the morning"
 
 
 # assume 0 as start of week
@@ -89,6 +82,12 @@ def next_monday(datetime_today: datetime.date):
     if days_ahead <= 0: # Target day already happened this week
         days_ahead += 7
     return datetime_today + datetime.timedelta(days_ahead)
+
+
+def whole_weeks_since(datetime_20210301: datetime.date):
+    datetime_today = datetime.date.today()
+    datetime_since = datetime_today - datetime_20210301
+    return datetime_since.days // 7
 
 
 def trash_check():
