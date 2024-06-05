@@ -1,14 +1,15 @@
 from calendar import Calendar
 import datetime
+from dotenv import load_dotenv
 from math import ceil
 import os
-from dotenv import load_dotenv
-
 import pytz
+from typing import List
 
 import discord
 from discord import Intents, utils
 from discord.ext import commands, tasks
+
 
 _street_sweep_days = [1, 2] # 1 corresponds to Tuesday, 2 corresponds to Wednesday
 _street_sweep_week = 3
@@ -55,25 +56,36 @@ def week_calc(datetime_today: datetime.date):
     return week_of_month_cal
 
 
-def this_month_street_sweep_tuesday(datetime_today: datetime.date):
-    week_of_month = week_calc(datetime_today)
-    if week_of_month < _street_sweep_week:
-        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
-    elif week_of_month == _street_sweep_week:
-        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
-    else:
-        # we can ignore 12 + 1 months and just check to exclude 12 
-        street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month + 1, 1)
-        if street_sweep_datetime in _winter_datetime_months:
-            raise RuntimeError("handle this case better")
+def this_month_street_sweeps(datetime_today: datetime.date):
+    street_sweep_day_list: List[datetime.date] = []
+
+    cal: Calendar = Calendar(6)
+    weeks: List[List[int]] = cal.monthdayscalendar(datetime_today.year, datetime_today.month)
+    street_sweep_week_list: List[int] = weeks[_street_sweep_week]
+
+    for street_sweep_day_index in _street_sweep_days:
+        street_sweep_day = street_sweep_week_list[street_sweep_day_index]
+        street_sweep_day_list.append(datetime.date(datetime_today.year, datetime_today.month, street_sweep_day))
+
+    return street_sweep_week_list
+    # week_of_month = week_calc(datetime_today)
+    # if week_of_month < _street_sweep_week:
+    #     street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
+    # elif week_of_month == _street_sweep_week:
+    #     street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month, 1)
+    # else:
+    #     # we can ignore 12 + 1 months and just check to exclude 12 
+    #     street_sweep_datetime = datetime.datetime(datetime_today.year, datetime_today.month + 1, 1)
+    #     if street_sweep_datetime in _winter_datetime_months:
+    #         raise RuntimeError("handle this case better")
 
 
 def street_sweep_check():
     datetime_today = datetime.date.today()
     if datetime_today.month in _winter_datetime_months:
-        return f"Today is in one of the winter months, which do not have street sweeping"
-    datetime_street = this_month_street_sweep_tuesday(datetime_today)
-    return f"Today is {datetime_today}, expected street sweeping this month on the near side is at {datetime_street}, far side at {datetime_street + datetime.timedelta(days=1)} sometime in the morning"
+        return f"Today is in one of the winter months {_winter_datetime_months}, which do not have street sweeping"
+    datetime_street_list = this_month_street_sweeps(datetime_today)
+    return f"Today is {datetime_today}, expected street sweeping this month on the near side is at {datetime_street_list[0]}, far side at {datetime_street_list[1]} sometime in the morning"
 
 
 # assume 0 as start of week
